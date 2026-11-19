@@ -34,24 +34,26 @@
 // Handle platform specific includes
 #include "contrib/windows.h"
 
-//There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
+#include <stdlib.h>
+#include <string.h>
+
+// Use the Windows CRT without a fixed-size name=value buffer.
 int setenv(const char *name, const char *value, int overwrite)
 {
-  char *env = getenv(name);
-  if ((env && overwrite) || (!env)) {
-    char str[32];
-    strcpy(str, name);
-    strcat(str, "=");
-    strcat(str, value);
-    return putenv(str);
+  if (!name || !*name || strchr(name, '=') || !value) {
+    return -1;
   }
-  return -1;
+  if (!overwrite && getenv(name)) {
+    return 0;
+  }
+  return _putenv_s(name, value) == 0 ? 0 : -1;
 }
 
 void unsetenv(const char *name)
 {
-  char str[32];
-  strcpy(str, name);
-  strcat(str, "=");
-  putenv(str);
+  if (!name || !*name || strchr(name, '=')) {
+    return;
+  }
+  // An empty value removes the variable in the Windows CRT.
+  _putenv_s(name, "");
 }

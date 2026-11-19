@@ -1,0 +1,33 @@
+name: Windows environment regression
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sys: MINGW64
+            package: mingw-w64-x86_64-gcc
+          - sys: UCRT64
+            package: mingw-w64-ucrt-x86_64-gcc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          install: ${{ matrix.package }}
+      - name: Compile Windows compatibility code with warnings as errors
+        shell: msys2 {0}
+        run: |
+          gcc -std=c99 -Wall -Wextra -Werror -I. \
+            test/test_win32_stdlib.c contrib/win32/stdlib.c \
+            -o test_win32_stdlib.exe
+      - name: Run without NFC hardware
+        shell: msys2 {0}
+        run: ./test_win32_stdlib.exe
