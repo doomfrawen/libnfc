@@ -31,9 +31,6 @@
  * @brief Windows System compatibility
  */
 
-// Handle platform specific includes
-#include "contrib/windows.h"
-
 #include <stdlib.h>
 #include <string.h>
 
